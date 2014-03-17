@@ -26,7 +26,7 @@
         android:contentDescription="Image from an invisible WebView" >
     </ImageView>
 
-    <!-- You can draw a bitmap with the number of pixel you even the WebView is 0.1dp -->
+    <!-- You can draw a bitmap with the number of pixel you want even the WebView is 0.1dp -->
 
     <WebView
         android:id="@+id/webView1"

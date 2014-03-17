@@ -1,0 +1,17 @@
+#android, .my_img_class, #chrome
+{ 
+	width: 20px;
+	height: 20px;
+}
+
+body
+{
+	width: 500px;
+	height: 500px
+}
+
+div > p
+{
+	background-color: #333;
+	color: white;
+}
