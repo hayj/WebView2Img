@@ -1,6 +1,17 @@
 package com.example.webview2img;
 
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.Namespace;
+import org.jdom2.filter.Filters;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.XMLOutputter;
+import org.jdom2.xpath.XPathExpression;
+import org.jdom2.xpath.XPathFactory;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -148,14 +159,8 @@ public class Page
 			@Override
 			public void run()
 			{
-				// Load an inline content :
-				// Page.this.webView
-				// .loadData(
-				// "<html><body><p>Test</p><p style=\"width: 20px;height: 20px; background-color: blue;\"></p></body></html>",
-				// "text/html", "UTF-8");
-
-				// Or load a file :
-				Page.this.webView.loadUrl("file:///android_asset/" + Page.this.fileName);
+				// Load a string using a baseURL :
+				Page.this.webView.loadDataWithBaseURL(Page.ASSET_ROOT, Page.this.getXML(), "text/html", "UTF-8", null);
 			}
 		}
 
@@ -207,7 +212,7 @@ public class Page
 		/**
 		 * This constructor perform the first step of the generation process
 		 */
-		public GenerationProcess()
+		private GenerationProcess()
 		{
 			this.nextState();
 		}
@@ -266,10 +271,9 @@ public class Page
 	 * The activity of the WebView
 	 */
 	private Activity activity;
-	/**
-	 * The file to load
-	 */
-	private String fileName;
+	private Document document;
+	private Element rootNode;
+	private static String ASSET_ROOT = "file:///android_asset/";
 
 	/**
 	 * Constructor which init the Page. Then you can use methods to change some content and finaly use generateBitmap.
@@ -281,9 +285,17 @@ public class Page
 	public Page(WebView webView, String fileName)
 	{
 		super();
-		this.fileName = fileName;
 		this.webView = webView;
 		this.activity = (Activity) this.webView.getContext();
+		try
+		{
+			this.document = (Document) (new SAXBuilder()).build(this.activity.getAssets().open(fileName));
+			this.rootNode = this.document.getRootElement();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -334,5 +346,70 @@ public class Page
 		// This must be done to fix some problems
 		// ie persistent static variables in the current Virtual Machine
 		Page.generationQueue = null;
+	}
+
+	/**
+	 * Set all elements to value according to a specified xpath
+	 */
+	protected boolean setAll(String xpath, String value)
+	{
+		List<Element> l = getAll(xpath);
+		Iterator<Element> it = l.iterator();
+		boolean isSet = false;
+		while(it.hasNext())
+		{
+			Element el = it.next();
+			el.setText(value);
+			isSet = true;
+		}
+		return isSet;
+	}
+
+	/**
+	 * Set the specified xpath expr to value
+	 */
+	protected boolean set(String xpath, String value)
+	{
+		Element l = get(xpath);
+		if(l != null)
+		{
+			l.setText(value);
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Get all elements according to a xpath expr
+	 */
+	protected List<Element> getAll(String xpath)
+	{
+		XPathFactory factory = XPathFactory.instance();
+		XPathExpression<Element> xpathExpr = factory.compile(xpath, Filters.element(), null,
+				Namespace.getNamespace("xpns", "http://www.w3.org/2002/xforms"));
+		return xpathExpr.evaluate(this.rootNode);
+	}
+
+	/**
+	 * Get an Element according to a xpath expr
+	 */
+	protected Element get(String xpath)
+	{
+		List<Element> l = getAll(xpath);
+		if(l != null && l.get(0) != null)
+			return l.get(0);
+		else
+			return null;
+	}
+	
+	/**
+	 * Get the String representation of the xml document
+	 */
+	protected String getXML()
+	{
+		XMLOutputter out = new XMLOutputter();
+		// out.setFormat(Format.getCompactFormat());
+		String compactXML = out.outputString(this.rootNode);
+		return compactXML;
 	}
 }

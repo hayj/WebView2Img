@@ -10,6 +10,7 @@ import com.example.webview2img.Page.PageListener;
 
 /**
  * Example activity which load R.layout.image_view and create new pages
+ * 
  * @author hayj
  */
 public class WebView2ImageView extends Activity implements PageListener
@@ -36,10 +37,10 @@ public class WebView2ImageView extends Activity implements PageListener
 	public void onGenerated(final Page page)
 	{
 		Bitmap b = page.getBitmap();
-		if(page == WebView2ImageView.this.page1)
-			WebView2ImageView.this.image1.setImageBitmap(b);
-		else
+		if(page == WebView2ImageView.this.page2)
 			WebView2ImageView.this.image2.setImageBitmap(b);
+		else
+			WebView2ImageView.this.image1.setImageBitmap(b);
 	}
 
 	@Override
