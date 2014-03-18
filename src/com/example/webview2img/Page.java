@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.Namespace;
@@ -176,8 +177,8 @@ public class Page
 			{
 				Page.this.bitmap = null;
 				Canvas c = null;
-				// Here you can set width and height according to the html content or the Page constructor :
-				Page.this.bitmap = Bitmap.createBitmap(500, 500, Bitmap.Config.ARGB_8888);
+				// Here you can set width and height according to the html content or the Page constructor... :
+				Page.this.bitmap = Bitmap.createBitmap(Page.this.width, Page.this.height, Bitmap.Config.ARGB_8888);
 				c = new Canvas(Page.this.bitmap);
 				// Set the box of the WebView :
 				Page.this.webView.layout(Page.this.webView.getLeft(), Page.this.webView.getTop(),
@@ -273,6 +274,8 @@ public class Page
 	private Activity activity;
 	private Document document;
 	private Element rootNode;
+	private int width = 500;
+	private int height = 500;
 	private static String ASSET_ROOT = "file:///android_asset/";
 
 	/**
@@ -323,6 +326,23 @@ public class Page
 		Page.generationQueue.add(this);
 	}
 
+	public void setSize(int width, int height)
+	{
+		// We set class vars :
+		this.width = width;
+		this.height = height;
+		// We init selectors :
+		String xpath = "//body";
+		String attr = "style";
+		// We make a new style according to the previous style :
+		String previousStyle = this.getAttr(xpath, attr);
+		String style = "width: " + this.width + "; height: " + this.height + ";";
+		if(previousStyle != null)
+			style += previousStyle;
+		// We set the style with the correct size :
+		this.setAttr(xpath, attr, style);
+	}
+
 	/**
 	 * Return the bitmap generated. You must use this method inside the callback function onGenerated.
 	 * 
@@ -364,10 +384,7 @@ public class Page
 		}
 		return isSet;
 	}
-	
-	/**
-	 * Set all attributs
-	 */
+
 	protected boolean setAllAttr(String xpath, String attr, String value)
 	{
 		List<Element> l = getAll(xpath);
@@ -380,6 +397,25 @@ public class Page
 			isSet = true;
 		}
 		return isSet;
+	}
+
+	protected boolean setAttr(String xpath, String attr, String value)
+	{
+		Element l = get(xpath);
+		if(l != null)
+		{
+			l.setAttribute(attr, value);
+			return true;
+		}
+		return false;
+	}
+
+	protected String getAttr(String xpath, String attr)
+	{
+		Element l = get(xpath);
+		if(l != null)
+			return l.getAttributeValue(attr);
+		return null;
 	}
 
 	/**
@@ -418,7 +454,7 @@ public class Page
 		else
 			return null;
 	}
-	
+
 	/**
 	 * Get the String representation of the xml document
 	 */

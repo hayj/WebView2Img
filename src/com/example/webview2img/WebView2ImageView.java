@@ -84,6 +84,7 @@ public class WebView2ImageView extends Activity implements PageListener
 				AndroidPage androidPage = new AndroidPage(WebView2ImageView.this.webView, "page1.html");
 				androidPage.androizer();
 				WebView2ImageView.this.page2 = androidPage;
+				WebView2ImageView.this.page2.setSize(180, 180);
 				WebView2ImageView.this.page2.generateBitmap(WebView2ImageView.this);
 
 			}
