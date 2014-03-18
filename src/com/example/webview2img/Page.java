@@ -364,6 +364,23 @@ public class Page
 		}
 		return isSet;
 	}
+	
+	/**
+	 * Set all attributs
+	 */
+	protected boolean setAllAttr(String xpath, String attr, String value)
+	{
+		List<Element> l = getAll(xpath);
+		Iterator<Element> it = l.iterator();
+		boolean isSet = false;
+		while(it.hasNext())
+		{
+			Element el = it.next();
+			el.setAttribute(attr, value);
+			isSet = true;
+		}
+		return isSet;
+	}
 
 	/**
 	 * Set the specified xpath expr to value
