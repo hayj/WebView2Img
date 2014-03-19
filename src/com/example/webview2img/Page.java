@@ -39,8 +39,6 @@ public class Page
 	{
 		/**
 		 * When the bitmap is generated
-		 * 
-		 * @param page
 		 */
 		public void onGenerated(Page page);
 	}
@@ -54,16 +52,16 @@ public class Page
 	{
 		private LinkedList<Page> queue = new LinkedList<Page>();
 
-		public void add(Page page)
+		public synchronized void add(Page page)
 		{
 			// If the queue is empty, we must start the first entry :
 			if(this.queue.isEmpty())
-				page.start();
+				page.startGeneration();
 			// Then we add the page to the list :
 			this.queue.addLast(page);
 		}
 
-		public void next()
+		public synchronized void next()
 		{
 			// Remove the previous page :
 			this.queue.removeFirst();
@@ -71,7 +69,7 @@ public class Page
 			if(!this.queue.isEmpty())
 			{
 				// Peek (not remove) and start the first element :
-				this.queue.peek().start();
+				this.queue.peek().startGeneration();
 			}
 			// Else we can clear the queue :
 			else
@@ -107,7 +105,7 @@ public class Page
 				if(visible)
 				{
 					Page.this.webView.setVisibility(View.VISIBLE);
-					GenerationProcess.this.nextState();
+					GenerationProcess.this.load();
 				}
 				else
 					Page.this.webView.setVisibility(View.INVISIBLE);
@@ -145,7 +143,7 @@ public class Page
 				if(GenerationProcess.this.pageFinished && !GenerationProcess.this.newPicture)
 				{
 					GenerationProcess.this.newPicture = true;
-					GenerationProcess.this.nextState();
+					GenerationProcess.this.generate();
 				}
 			}
 		}
@@ -188,7 +186,7 @@ public class Page
 				// Draw the bitmap :
 				Page.this.webView.draw(c);
 				// Go to the next step :
-				GenerationProcess.this.nextState();
+				GenerationProcess.this.finish();
 			}
 		}
 
@@ -206,7 +204,6 @@ public class Page
 			}
 		}
 
-		int state = -1;
 		private boolean pageFinished = false;
 		private boolean newPicture = false;
 
@@ -215,41 +212,53 @@ public class Page
 		 */
 		private GenerationProcess()
 		{
-			this.nextState();
+			this.start();
 		}
 
-		private void nextState()
+		/**
+		 * Step 0 : we call the first step
+		 */
+		private void start()
 		{
-			// The current state is inc :
-			this.state++;
-			switch(this.state)
-			{
-				case 0:
-					// Set the webview visible
-					Page.this.activity.runOnUiThread(new WebViewVisibility(true));
-					break;
-				case 1:
-					// Then set callbacks :
-					Page.this.webView.setWebViewClient(new WebViewClientListener());
-					Page.this.webView.setPictureListener(new WebViewPictureListener());
-					// And load content in the UI Thread :
-					Page.this.activity.runOnUiThread(new WebViewLoader());
-					break;
-				case 2:
-					// Then perform the generation :
-					new BitmapGenerator().start();
-					break;
-				case 3:
-					// Finally, we call the listener to indicate that the generation is finished :
-					Page.this.activity.runOnUiThread(new onGeneratedHandler());
-					// Set the visibility to INVISIBLE :
-					Page.this.activity.runOnUiThread(new WebViewVisibility(false));
-					// And go the next task :
-					Page.generationQueue.next();
-					break;
-			}
+			visible();
 		}
 
+		/**
+		 * Step 1 : Set the webview visible
+		 */
+		private void visible()
+		{
+			Page.this.activity.runOnUiThread(new WebViewVisibility(true));
+		}
+
+		/**
+		 * Step 2 : Set callbacks and load content in the UI Thread :
+		 */
+		private void load()
+		{
+			Page.this.webView.setWebViewClient(new WebViewClientListener());
+			Page.this.webView.setPictureListener(new WebViewPictureListener());
+			Page.this.activity.runOnUiThread(new WebViewLoader());
+		}
+
+		/**
+		 * Step 3 : Perform the generation
+		 */
+		private void generate()
+		{
+			new BitmapGenerator().start();
+		}
+
+		/**
+		 * Step end : Finally, we call the listener to indicate that the generation is finished, Set the visibility to
+		 * INVISIBLE and go the next task
+		 */
+		private void finish()
+		{
+			Page.this.activity.runOnUiThread(new onGeneratedHandler());
+			Page.this.activity.runOnUiThread(new WebViewVisibility(false));
+			Page.generationQueue.next();
+		}
 	}
 
 	/**
@@ -304,7 +313,7 @@ public class Page
 	/**
 	 * Start the generation process according to GenerationProcess' steps
 	 */
-	private void start()
+	private void startGeneration()
 	{
 		new GenerationProcess();
 	}
