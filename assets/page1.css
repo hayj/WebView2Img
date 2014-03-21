@@ -1,7 +1,16 @@
-#android, .my_img_class, #chrome
+#android, #chrome
 { 
 	width: 20px;
 	height: 20px;
+	/*max-width: 40px;
+	max-height: 40px;*/
+	/*width: 20px;*/
+}
+
+.my_img_class
+{
+	max-width: 120px;
+	max-height: 120px;
 }
 
 body

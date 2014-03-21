@@ -119,9 +119,9 @@ public class Page
 		 */
 		private class WebViewClientListener extends WebViewClient
 		{
-
 			public void onPageFinished(WebView view, String url)
 			{
+				super.onPageFinished(view, url);
 				// We set a boolean to specify that the page is loaded :
 				GenerationProcess.this.pageFinished = true;
 			}
